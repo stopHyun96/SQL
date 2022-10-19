@@ -1,0 +1,136 @@
+drop table productdata;
+drop table martdata;
+drop table people;
+drop table phone;
+
+-- 상품 정보
+-- 상품이름, 상품가격, 상품재고, 상품위치(마트이름)
+-- 마트 정보
+-- 마트이름, 마트이용자수
+
+-- 상품 이름 중복불가, 마트이름 중복 불가
+-- 마트 하루 이용자 수 비어있음 안됨
+-- 상품재고 필요없음(출력 표에서 제거)
+
+alter table martdata add constraint pk_const primary key (martname);
+
+create table productdata(
+    prodname nvarchar2(30) primary key,
+    prodprice number(9) not null,
+    prodcount number(4) not null,
+    martname nvarchar2(30) not null
+);
+
+create table martdata(
+    martname nvarchar2(30) not null,
+    martusers number(9) not null
+);
+
+insert into productdata (prodname, prodprice, prodcount, martname)
+values ('프로틴', 50000, 1000, '지현마트');
+insert into productdata (prodname, prodprice, prodcount, martname)
+values ('스트랩', 46000, 350, 'ㅇㅇ마트');
+insert into productdata (prodname, prodprice, prodcount, martname)
+values ('오트밀', 50000, 1000, 'ㅁㅁ마트');
+insert into productdata (prodname, prodprice, prodcount, martname)
+values ('리프팅 벨트', 80000, 300, 'ㅅㅅ마트');
+
+insert into martdata (martname, martusers)
+values ('지현마트', 2145201);
+insert into martdata (martname, martusers)
+values ('ㅇㅇ마트', 21422333);
+insert into martdata (martname, martusers)
+values ('ㅁㅁ마트', 141531251);
+insert into martdata (martname, martusers)
+values ('ㅅㅅ마트', 745467);
+
+select * from productdata;
+select * from martdata;
+
+select productdata.prodname as 상품명, productdata.prodprice as 가격, productdata.prodcount as 재고, martdata.martname as 상품위치, martdata.martusers as 마트이용객수
+from productdata, martdata
+where productdata.martname = martdata.martname;
+
+
+-- 사람 정보
+create table people (
+    name nvarchar2(20) not null,
+    registcode nvarchar2(14) primary key
+);
+
+-- 핸드폰 정보
+create table phone(
+    registcode nvarchar2(14) primary key,
+    numb nvarchar2(13) unique not null
+);
+
+insert into people(name, registcode)
+values ('홍길동', '000918-3584736');
+insert into people (name, registcode)
+values ('이인화', '001018-4394839');
+insert into phone (registcode, numb)
+values ('000918-3584736', '010-1111-2222');
+insert into phone (registcode, numb)
+values ('001018-4394839', '010-3333-4444');
+
+select * from people;
+select * from phone, people where phone.registcode = people.registcode;
+select phone.numb, people.name, phone.registcode
+from phone, people
+where phone.registcode = people.registcode;
+
+--grant connect, resource, dba to dbms_220913;  권한주기
+--revoke connect, recource, dba to dbma_220913; 권한뺏기
+
+--다른 유저에게 DB권한을 주기 위해서 사용
+--데이터 임포트(import 추가하다)
+
+--excel to db
+
+--기본 테이블
+create table product(
+    name nvarchar2(10),
+    price number(9),
+    ea number(4)
+);
+--name, price, count, receipe(date)를 가진 테이블로 변경
+--name은 primary key
+--price는 not null
+
+select * from product;
+alter table product add (receipe date);
+alter table product rename column ea to count;
+alter table product add constraint pk_const primary key (name);
+alter table product modify price not null;
+
+
+drop table product;
+
+select * from product;
+
+-- 이미 존재하는 테이블에 추가적인 열 또는 추가적인 제약조건을 줘야할 때
+-- 테이블 수정
+alter table product add(count number(4));
+alter table product rename column count to ea;
+
+select * from product;
+
+alter table product rename column ea to count;
+alter table product add(receipe date);
+alter table product drop column receipe;
+
+-- UNIQUE 데이터 중복제거
+alter table product add constraint unique_const unique (name);
+-- Primary Key - 기본키(중복이 안되는 제약조건)(비어있음 안됨)
+-- Unique + not null
+alter table product add constraint pk_const primary key (name);
+-- not null - 비어있음 안됨
+alter table product modify name not null;
+-- UNIQUE 삭제
+alter table product drop constraint unique_const;
+--not null을 null로 바꿔서 null을 허용
+alter table product modify name null;
+
+
+select * from all_constraints;
+
