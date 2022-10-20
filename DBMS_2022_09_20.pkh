@@ -1,0 +1,53 @@
+--기본키, 외래키, ERD
+--기본키 -> 제약조건 constraint
+--넣는 데이터의 제약
+--NOT NULL -> 빈공간 안됨
+--UNIQUE -> 중복 안됨
+--기본키 -> 제약조건, 기본적으로 넣는 데이터 -> NOT NULL, UNIQUE
+--	데이터 검색 -> 유일하지 않아도 됨
+--	데이터 검색 -> 유일해야 될 때
+--	유일한 검색 -> 사용빈도 낮음
+
+--외래키 -> 밖에서 가져오는 데이터
+--외래 -> 밖에서 가져오는 것
+--기본키 -> 중복이 안되는 데이터(비어있지 않음)
+
+card <-> people
+
+--데이터를 가져오는 테이블 card (자식)
+--데이터를 주는 테이블 people (부모)
+--외래키 -> 부모 테이블의 기본키
+--	 부모 테이블의 유일한 데이터
+
+--Entity Relationship Diagram -> 테이블 관계를 나타내는 표
+--ERD -> 테이블의 관계를 나타내는 그림
+--테이블의 개수가 적을 때는 아무런 문제없이 테이블 관리 가능
+--테이블의 개수가 많을 때 - 내가 관리하기 벅찰 정도로 많을 때
+--	1. 테이블의 중복
+--	2. 테이블의 데이터 관리 어려움
+
+--관리하는 테이블들의 구조도 - ERD
+
+create table A(
+	keycode number(10) primary key,
+	test nvarchar2(32) not null
+	constraint ACTest foreign key (test) references people(registnumber)
+);
+
+create table B(
+	keycode number(10) primary key,
+	test nvarchar2(32) unique not null
+	constraint BCTest foreign key (test) references people(registnumber)
+);
+
+create table A(
+	keycode number(10) primary key,
+	test nvarchar2(14) ,
+	constraint ACTest foreign key (test) references people(registnumber)
+);
+
+create table B(
+	keycode number(10) primary key,
+	test nvarchar2(14) unique ,
+	constraint BCTest foreign key (test) references people(registnumber)
+);
