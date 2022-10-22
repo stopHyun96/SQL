@@ -1,0 +1,111 @@
+-- CRUD (create, read, update, delete)
+insert into people(keycode,name,registnumber,location,phone)
+values(9999999, "홍길동", "123456-1234567", "집주소", "010-1111-1111");
+
+-- select -> 정보들을 선택해서 보여주겠다.
+-- 테이블 이름에서 정보를 선택할 것인데, *(모든정보)를 선택하겠다.
+-- 여러개의 테이블을 한번에 가져오는 이유 -> 연결되어 있기 때문(외래키)
+-- 데이터의 일부분만 뽑는 방식 -> 조건절
+-- 관리하는 데이터의 자료형 -> number or date, char
+
+select people.keycode, people.name, people.registnumber, people.location, card.cardnumber, card.cardname from people, card
+where people.registnumber = card.registnumber;
+
+select keycode, name from people
+where keycode < 10;
+
+-- 문자 조건절
+-- 유사 조건
+-- token(%, _)
+-- % -> 아무글자나 상관없이 0글자 이상
+-- _ -> 아무글자나 상관없이 1글자만
+select keycode, name, registnumber, location, phone
+from people
+where name like '독고__';
+
+select registnumber from people
+where name = '학란';
+
+select * from people, card
+where ;
+
+select registnumber from people;
+select * from univercity;
+select cardnumber from card;
+select * from people;
+
+-- 김씨만 검색, 세글자 이름 검색, 영수만 검색
+select name from people
+where name like '김%';
+
+select name from people
+where name like '___';
+
+select name from people
+where name like '%영수';
+
+-- 91년생만 검색, 95년생이거나 97년생인 김씨만 검색
+select name, registnumber from people 
+where registnumber like '91%';
+
+select keycode, name, registnumber, location, phone from people
+where (registnumber like '95%' or registnumber like '97%') and name like '김%'
+order by people.keycode asc;
+-- asc -> 오름차순
+-- desc -> 내림차순
+
+
+-- 빈 칼럼
+select * from people
+where phone is not null;
+
+select * from card;
+
+select * from card
+where carename like '하나카드' or cardname like '삼성카드';
+
+-- 요일을 구할 때
+select * from card
+where cardname in ('하나카드', '삼성카드');
+
+-- 업데이트, 삭제
+--delete from people
+--where name like '김%';
+
+--update people set phone = '0000';
+--people의 phone 행의 데이터를 모두 '0000'으로 수정
+
+--update people set phone = '0000'
+--where name like '김%';
+--김씨 성을 가진 이름의 phone 데이터를 모두 '0000'으로 수정
+select * from people;
+
+--김씨의 폰 번호를 016-으로 변경(뒷번호는 마음대로)
+update people set phone = '016-0000-0000'
+where name like '김%';
+-- 91년생 데이터 삭제
+delete from people
+where registnumber like '91%';
+
+constraint fk_ foreign key (registnumber) references other(registnumber)
+on delete cascade;
+
+select distinct univercityname from univercity;
+-- distinct 중복제거
+
+-- 카드이름 모두출력
+select distinct cardname,registnumber from card
+order by cardname asc;
+-- 카드이름을 중복 제거 되게끔 출력하되 registnumber이 다르다면 별개의 객체로 인지한다.
+-- 대학 과 모두 출력
+select distinct majorname from univercity;
+-- 사람 이름 모두 출력
+select distinct name from people;
+
+-- 사용자가 추가적으로 만든 기능 -> 함수
+select distinct name from people;
+select count(distinct cardname) from card;
+-- count 함수 안의 조건에 맞는 데이터의 개수를 출력
+select distinct majorname from univercity;
+
+rollback;
