@@ -1,0 +1,201 @@
+-- 함수 -> 수학에서의 함수 ?
+-- 특정 데이터(입력값)을 넣었을 때 특정 결과를 구하는 기능
+
+-- 함수의 종류
+-- 시스템 함수, 집계 함수
+-- 집계 함수 -> 전체 데이터를 입력값으로 이용
+-- 시스템 함수 -> 한개의 데이터를 입력값으로 이용
+
+-- 입력값 -> 숫자
+-- 입력값 -> 날짜
+-- 입력값 -> 문장
+create table functiontest(
+    datacolumn nvarchar2(32) not null
+);
+insert into functiontest values('this is test text!');
+insert into functiontest values('thisistesttext!');
+insert into functiontest values('cat');
+insert into functiontest values('card');
+-- 함수의 사용법
+-- A(입력값)
+select * from functiontest;
+-- lower(소문자화)
+-- upper(대문자화)
+select lower(datacolumn) from functiontest;
+select upper(datacolumn) from functiontest;
+
+select datacolumn from functiontest
+where lower(datacolumn) = lower('cat');
+
+-- initcap -> 첫글자 대문자화
+select initcap(datacolumn) from functiontest;
+
+-- concat -> 문장 더하기
+select upper(datacolumn || ' abcd') from functiontest;
+select lower(concat(datacolumn, ' abcd')) from functiontest;
+
+-- substr -> 문장 자르기 -> substr(원본문장, 시작위치, 글자개수)
+-- length -> 문장 글자 세기
+select keycode, name, registnumber, phone, location, concat('20',(substr(registnumber, 1, 2))), length(registnumber)
+from people;
+
+-- people의 생년 월 일을 칼럼으로 뽑기, 성별 칼럼으로 뽑기
+select substr(registnumber, 1, 6) from people;
+select substr(registnumber, 8, 1) from people;
+
+-- trim -> 공백 제거 -> 불필요한 좌우 공백 제거
+--ltrim -> 왼쪽 공백 제거 -> 왼쪽에 반복되는 문자 제거
+--ltrim(문장, 옵션)
+--rtrim -> 오른쪽 공백 제거 -> 오른쪽에 반복되는 문자 제거
+--rtrim(문장, 옵션)
+select trim('     abcdefg abcdefg        '),
+ltrim('abcabcabcdefgdefg', 'abc'),
+rtrim('abcabcabcdefgdefg', 'defg')
+from people;
+
+--lpad(원본문장, 길이, 문자)
+--lpad -> 길이만큼의 공간을 밀이 할당
+--rpad(원본문장, 길이, 문자)
+--lpad -> 길이만큼의 공간을 밀이 할당
+select
+lpad(location, 30, 'a'),
+rpad(location, 30, 'b')
+from people;
+
+--translate -> 글자를 바꾸는 기능
+--translate(원본문장, 대응셋1, 대응셋2)
+--대응셋 1번에서 1글자를 원본문장에서 찾으면 대응셋2번 글자로 변경
+select
+translate(registnumber, '0123', 'abcd')
+from people;
+
+--replace(원본문장, 찾을문장, 변할문장)
+--원본문장에서 찾을 문장을 변할 문장으로 바꾸는 기능
+select
+replace(location, '강원도', '강북도'),
+substr(registnumber, 1, 2)
+from people;
+
+--instr(원본문장, 찾을문장, 글자를 찾을 시작위치, 몇번째) -> 글자의 위치를 구하는 함수
+select
+instr(location, 1, 1,instr(location,' ', 1, 1)-1)
+from people; 
+
+--숫자 함수
+--올림, 내림, 반올림
+--round -> 반올림
+--round(숫자, 자리)
+
+select
+12345.1214 as 원본,
+round(123456.0789, -1) as equal10,
+round(123456.0789, -2) as equal100,
+round(123456.0789, 0) as equal0,
+round(123456.0789, 1) as equal1,
+round(123456.0789, 2) as equal2
+from people;
+
+--trunc -> 내림
+--trunc(숫자, 자리)
+select
+trunc(123456.0789, 0) as equal0,
+trunc(123456.0789, 1) as equal1,
+trunc(123456.0789, 2) as equal2
+from people;
+
+--floor, ceil
+--floor -> 내림
+--ceil -> 올림
+select
+floor(0123456.0789),
+ceil(0123456.0789)
+from people;
+
+--mod(숫자, 숫자) -> 나머지
+select
+mod(7, 4)
+from people;
+
+-- abs(절대값), log(로그 지수), tan, cos, sin(삼각함수), power(제곱) -> 수학 함수
+
+-- 날짜 함수
+-- round -> 0시, 0분, 1일
+-- add_months(날짜, 개월수) -> 날짜의 개월수를 더한다.
+select
+add_months(sysdate, -3)
+from dual;
+
+-- last_day(날짜) -> 해당 월의 마지막 일 구하기
+select
+last_day(sysdate)
+from dual;
+
+-- new_time(날짜, 존, 존) -> 
+-- AST, ADT, BST, BDT, CST, CDT, EST, EDT, GMT, HST, HDT, MST, MDT
+-- NST, PST, PDT, YST, YDT
+select
+systimestamp,
+new_time(sysdate, 'GMT', 'HST')
+from dual;
+
+-- next_day(날짜, 요일) -> 오늘 이후 오는 입력한 요일의 날짜를 구하기
+-- 일, 월, 화, 수, 목, 금, 토
+-- 일요일, 월요일, 화요일, 수요일, 목요일, 금요일, 토요일
+-- sunday, monday, tuesday, wednesday, thursday, friday, saturday
+-- sun, mon, tue, wed, thru, fri, sat
+select
+next_day(sysdate, '일')
+from dual;
+
+-- months_between(나중 날짜, 기준 날짜) -> 날짜와 날짜 사이의 개월수 구하기
+select
+months_between(sysdate + 30, sysdate)
+from dual;
+
+-- 변환함수
+-- to_char -> 숫자 또는 날짜를 글자로 변경
+-- to_number -> 글자를 숫자로 변경
+-- to_date -> 글자를 날짜로 변경
+
+-- 날짜 형식
+-- MM -> 달
+-- MON -> 월 이름
+-- MONTH -> 월 풀네임
+-- DD -> 날짜
+-- D -> 주의 일 수
+-- DY -> 일 이름
+-- DAY -> 일 풀네임
+-- YYYY -> 연도전체
+-- YY -> 연도 뒤 두자리
+select
+to_number('1234' + 5) + 5
+from people;
+
+select
+to_char(sysdate, 'DAY')
+from people;
+
+select
+to_char(sysdate, 'YYYY/DAY')
+from people;
+
+--숫자 형식
+-- 9 -> 한개의 숫자 자리수
+-- 0 -> 빈 공간
+select
+to_char(51234.123124, '99999.999')
+from people;
+
+select
+to_char(1234.123124, '099999.99')
+from people;
+
+-- 원하는 공간에 쉼표 넣어주기
+select
+to_char(634451234.123124, '999,999,999.99')
+from people;
+
+-- 금액화(만든사람이 미국인이라 $(달러)밖에 안된다)
+select
+to_char(634451234.123124, '$999,999,999.99')
+from people;
