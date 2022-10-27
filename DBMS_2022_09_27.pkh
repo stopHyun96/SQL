@@ -1,0 +1,228 @@
+-- 시스템 함수
+--데이터 1개의 조작
+--입력으로 데이터 1개를 받는 함수
+--round(1, 2) 1개의 행을 가진다.
+
+--집계 함수
+--여러개의 행의 집계 데이터 함수
+
+-- 집계함수
+-- 숫자에 대한 통계가 대부분
+-- SUM, MAX, MIN, AVG, COUNT
+-- 무조건 함수의 입력값 -> 칼럼
+-- 설정된 칼럼이 한개의 그룹
+-- 집계 함수를 위한 그룹화 기능
+
+select sum(score), max(score), min(score), avg(score), count(score) from student;
+
+select major, max(score)
+from student
+group by major;
+
+select student.major, max(student.score)
+from student
+group by student.major 
+having student.major = 14;
+
+-- 집합
+-- 합집합
+-- union, union all (합집합)
+-- union all - 중복되는 값도 출력
+select 
+people.name, univercity.name as univercity, major.name as major,
+student.grade, student.score
+from student, univercity, major, people
+where
+student.people = people.keycode and
+student.univercity = univercity.keycode and
+student.major = major.keycode and
+major.name like '건축공학과'
+
+union all
+
+select 
+people.name, univercity.name as univercity, major.name as major,
+student.grade, student.score
+from student, univercity, major, people
+where
+student.people = people.keycode and
+student.univercity = univercity.keycode and
+student.major = major.keycode and
+major.name like '건축%';
+
+-- 교집합
+-- intersect
+select 
+people.name, univercity.name as univercity, major.name as major,
+student.grade, student.score
+from student, univercity, major, people
+where
+student.people = people.keycode and
+student.univercity = univercity.keycode and
+student.major = major.keycode and
+major.name like '건축공학과'
+
+intersect
+
+select 
+people.name, univercity.name as univercity, major.name as major,
+student.grade, student.score
+from student, univercity, major, people
+where
+student.people = people.keycode and
+student.univercity = univercity.keycode and
+student.major = major.keycode and
+major.name like '건축%';
+
+-- 차집합
+-- minus
+-- 순서에 따라 다른 결과가 출력됨
+-- 건축공학과 출력한 데이터 중 성적이 3점 이상인 데이터는 빼고 출력
+-- 성적이 3점 이상인 데이터 중 건축공학과 데이터를 빼고 출력
+select 
+people.name, univercity.name as univercity, major.name as major,
+student.grade, student.score
+from student, univercity, major, people
+where
+student.people = people.keycode and
+student.univercity = univercity.keycode and
+student.major = major.keycode and
+major.name like '건축공학과'
+
+minus
+
+select 
+people.name, univercity.name as univercity, major.name as major,
+student.grade, student.score
+from student, univercity, major, people
+where
+student.people = people.keycode and
+student.univercity = univercity.keycode and
+student.major = major.keycode and
+student.score >= 3;
+
+-- 점수 3점 이상 학생들의 주소
+-- 각 학년의 평균 점수
+select people.name, people.location
+from student,people
+where
+student.people = people.keycode and
+student.score >= 3;
+
+select grade, avg(score)
+from student
+group by grade;
+
+select 
+translate(substr(registnumber,8,1),'1357924680','남남남남남여여여여여')
+from people;
+
+
+-- 점수가 몇점 이상이면 ''으로 변환
+select 
+case score
+when 5 then 'A'
+when 4 then 'B'
+when 3 then 'C'
+else 'F'
+end as score_grade, grade
+from student;
+
+select
+people.name, univercity.name as univercity, major.name as major,
+concat (student.grade, ' 학년') as grade, student.score,
+case
+    when grade != 1 then
+        case score
+        when 5 then 'A'
+        when 4 then 'B'
+        when 3 then 'C'
+        else 'F'
+        end
+    else '무등급'
+end as scoregrade
+from student, univercity, major, people
+where
+student.people = people.keycode and
+student.univercity = univercity.keycode and
+student.major = major.keycode;
+
+select
+people.name, univercity.name as univercity, major.name as major,
+case grade
+    when 1 then concat('최저', '학년')
+    when 4 then concat('최고', '학년')
+    else to_char(grade)
+end
+as grade, student.score,
+case
+    when grade != 1 then
+        case score
+        when 5 then 'A'
+        when 4 then 'B'
+        when 3 then 'C'
+        else 'F'
+        end
+    else '무등급'
+end as scoregrade
+from student, univercity, major, people
+where
+student.people = people.keycode and
+student.univercity = univercity.keycode and
+student.major = major.keycode;
+
+-- 학생정보 출력 - 이름, 나이, 성별, 주소, 학교, 과, 학년, 점수
+-- 2점 이하 F, 3점 C 4점 B 5점 A - 등급 칼럼 생성
+-- 등급은 F등급, C등급 처럼 등급이랑 글자가 붙어서 나오도록 생성
+-- 심리학과는 전체 무등급이 나오도록
+-- 00년 이후 학생은 제외
+
+select 
+people.name,
+concat(2022 - (to_number(substr(registnumber, 1, 2)) +
+case to_number(substr(people.registnumber,8,1))
+when 1 then 1900
+when 2 then 1900
+when 5 then 1900
+when 6 then 1900
+when 3 then 2000
+when 4 then 2000
+when 7 then 2000
+when 8 then 2000
+when 9 then 1800
+when 0 then 1800
+end), '세') as age,
+translate(substr(people.registnumber,8,1),'1357924680','남남남남남여여여여여') as gender,
+people.location,
+univercity.name as univercity,
+major.name as major,
+student.score,
+concat(
+case
+when major.name = '심리학과' then '무'
+    else
+        case student.score
+        when 5 then 'A' 
+        when 4 then 'B' 
+        when 3 then 'C' 
+        else 'F'
+        end
+end,'등급') as scoregrade
+from student, people, major, univercity
+where
+student.people = people.keycode and
+student.major = major.keycode and
+student.univercity = univercity.keycode and
+(to_number(substr(registnumber, 1, 2)) +
+case to_number(substr(people.registnumber,8,1))
+when 1 then 1900
+when 2 then 1900
+when 5 then 1900
+when 6 then 1900
+when 3 then 2000
+when 4 then 2000
+when 7 then 2000
+when 8 then 2000
+when 9 then 1800
+when 0 then 1800
+end) < 2000;
