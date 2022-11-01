@@ -1,0 +1,130 @@
+-- 서브 쿼리 -> 검색
+-- 메인 쿼리 -> 검색
+-- 최고점수 학생 검색
+-- 한개의 테이블 -> 한개의 행 -> 한개의 데이터
+select max(score) from student;
+
+select * from student
+where score = (select max(score) from student); -- () -> 서브쿼리로 만들겠다.
+
+-- 테이블의 데이터 구조
+-- 입력한 데이터, 검색한 데이터, 상수값
+select * from people
+where keycode = 0;
+
+-- 테이블 -> 한행의 데이터가 여러개로 묶여있는 것
+-- 한 행의 데이터(keycode, registnumber, ...), ((keycode, registnumber, ...), ....
+-- 한행 -> 한 개의 데이터가 여러개 (keycode), (registnumber),...
+
+-- select * from 테이블 where 조건절 -> (검색된 데이터) 가공 ->
+
+-- 행 2개 이상, 칼럼 1개 -> 집합
+select * from student
+where grade in (select distinct grade from student
+where score = (select max(score) from student)); -- 1,4
+select * from student
+where grade in (1,4); -- 왼쪽 in 오른쪽집합
+select * from student
+where grade > any (2,3); -- 왼쪽 연산자 any 오른쪽 집합 
+select * from student
+where grade > all (2,3); -- 왼쪽 연산자 all 오른쪽 집합
+
+-- where exists(서브쿼리); -> 서브쿼리문의 결과물이 나올지 안나올지 애매한 상황에 사용
+-- where not exists(서브쿼리); -> 서브쿼리문의 결과물이 나올지 안나올지 애매한 상황에 사용
+
+insert into people values(1, '도영록', '990322-1441686', '010-4545-5656', '전라북도 무주군');
+insert into people values(
+(select max(keycode) from people)+1, '도영록',  '990322-1441686', '010-4545-5656', '전라북도 무주군');
+
+select * from student where score = 
+(select max(score) from student);
+
+select name from univercity
+where keycode in
+(select distinct univercity
+from student
+where score =
+    (select max(score) from student));
+
+-- 서브쿼리 -> 완성형
+-- 서브쿼리 -> 미완성형
+
+select name from univercity where keycode in
+(select univercity from student where score = (
+select max(score) from student where univercity = 5));
+
+select * from student, people
+where student.people = people.keycode;
+
+-- 최고 점수를 가진 알바를 하는 학생의 평균 시급
+select avg(wage) from employee where people in
+(select people from student where score in
+(select max(score) from student));
+
+-- 알바를 하는 사람들의 평균 시급보다 낮은 시급의 학생들의 평균 점수
+select avg(score) from student where people in
+(select people from employee where wage <
+(select avg(wage) from employee));
+
+select * from student;
+
+insert into student values(3,3,3,4,3.28);
+
+insert into student values(
+(select
+case
+when 9000 in (select keycode from people) then 9000
+else 0
+end
+from dual),3,3,4,3.28);
+select * from student where people = 0;
+select * from student where people = 3;
+
+insert into people values((select max(keycode) from people) + 1
+,'김아무개','890915-1764522','010-8282-4531','서울특별시 동대문구');
+
+-- 시퀀스 기능
+-- 시퀀스 생성
+-- 최대값 도달 시 최소값으로 다시 시작 - 사이클
+create sequence people_index
+increment by 1
+start with 8006
+minvalue 0
+maxvalue 10000
+nocycle
+nocache
+noorder;
+
+--nextval, currval
+--currval -> 지금 값 나타내라 -> 8005
+--nextval -> 지금 값 나타내라 + 지금 값 변화시켜라
+--currval -> 8005, increment - 1
+-- currval - 8005, currval - 8005
+-- nextval - 8005, nextval - 8006
+
+insert into people values(people_index.nextval, '정아무개','890915-1764522', '010-8282-4531','서울특별시 동대문구');
+
+alter sequence people_index maxvalue 100000; -- 시퀀스 수정
+drop sequence people_index; -- 시퀀스 삭제
+
+-- 최고 점수 이거나 최저 점수인 학생 목록
+select * from student where score in
+((select min(score) from student),
+(select max(score) from student));
+
+select * from student
+where score in
+(select max(score) as score from student
+union
+select min(score) as score from student);
+
+select * from people;
+select name from people where keycode in 
+(select people from student where score in
+((select min(score) from student),
+(select max(score) from student)));
+
+select * from student where score =
+(
+    select max(score) from student
+);
