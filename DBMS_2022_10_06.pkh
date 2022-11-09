@@ -1,0 +1,170 @@
+-- 뷰
+-- 서브쿼리
+-- 서브쿼리의 불편함 - 매번 검색을 추가 작성해야 한다.
+
+-- 뷰
+-- 내가 검색한 결과물을 미리 저장해둔 테이블
+-- 내가 검색하라고 한 질의문(select * from ~~) 을 미리 저장해둔 것
+-- 뷰는 기본적으로 질의문을 편하게 보기 위해 생성 된 것이기 때문에 수정이 불가능하다.
+-- 하지만  create or replace를 적으면 수정이 가능하다.
+-- force 에러가 발생해도 뷰를 생성한다. noforce 에러가 발생하면 뷰를 생성하지 않는다.
+-- with read only -> 읽기전용 -> insert delete 등 모든 수정 가능성을 배제하고 오직 뷰로써의 기능만 수행한다.
+
+-- with check option -> where절에 적은 조건에 위배될시 수정이 불가하다.
+-- -> 복합뷰가 아닌 단순뷰에 주로 쓰인다.
+
+select * from student where score = 4.5;
+
+create or replace noforce 
+view maxscore
+as select * from student where score = (select max(score) from student)
+with read only;
+
+select * from maxscore;
+drop view maxscore;
+
+select * from student where score = (select max(score) from student);
+select * from student where score = (select score from maxscore);
+
+create or replace noforce
+view student2
+as
+select grade, score from student;
+
+create or replace noforce
+view major5
+as
+select * from student where major = 5
+with check option;
+
+select * from major5;
+
+create or replace noforce
+view b
+as
+select * from student inner join employee using(people);
+
+drop view b;
+
+-- 평균 점수 이상의 학생들 중 알바를 하는 학생들의 평균 시급
+create or replace noforce
+view avg_up_student
+as
+select * from student where score >= (select avg(score) from student)
+with read only;
+
+create or replace noforce
+view avg_up_student_to_employee
+as
+select * from avg_up_student inner join employee using(people)
+with read only;
+
+select avg(wage) from avg_up_student_to_employee;
+
+-- 각 학년마다 평균 점수를 구하고 그 점수 이상인 학생들을 구하는 뷰
+create or replace noforce view avg_1 as
+select avg(score) as score from student where grade = 1 with read only;
+create or replace noforce view avg_2 as
+select avg(score) as score from student where grade = 2 with read only;
+create or replace noforce view avg_3 as
+select avg(score) as score from student where grade = 3 with read only;
+create or replace noforce view avg_4 as
+select avg(score) as score from student where grade = 4 with read only;
+
+create or replace noforce view avg_1_up as
+select * from student where grade = 1 and score >= (select score from avg_1) with read only;
+create or replace noforce view avg_2_up as
+select * from student where grade = 2 and score >= (select score from avg_1) with read only;
+create or replace noforce view avg_3_up as
+select * from student where grade = 3 and score >= (select score from avg_1) with read only;
+create or replace noforce view avg_4_up as
+select * from student where grade = 4 and score >= (select score from avg_1) with read only;
+
+create or replace noforce view avg_up as
+select * from avg_1_up 
+union 
+select * from avg_2_up 
+union 
+select * from avg_3_up 
+union 
+select * from avg_4_up;
+
+select * from avg_up;
+
+-- 각 학년마다 평균 점수 이상인 학생들 중 가장 많은 학생이 있는 학년을 구하는 뷰
+create or replace noforce view count_1 as
+select count(grade) as count from avg_up where grade = 1 with read only;
+create or replace noforce view count_2 as
+select count(grade) as count from avg_up where grade = 2 with read only;
+create or replace noforce view count_3 as
+select count(grade) as count from avg_up where grade = 3 with read only;
+create or replace noforce view count_4 as
+select count(grade) as count from avg_up where grade = 4 with read only;
+
+create or replace noforce view count_all as
+select grade, count(grade) as count from avg_up group by grade;
+
+select grade from count_all where count = (select max(count) as max from count_all);
+
+-- 각 학년마다 평균 점수 이상인 학생들 중 가장 많은 학생이 있는 학년을 제외한 나머지 학년의 학생들의 총 인원수를 구하는 뷰
+select count(grade) from avg_up where grade != (select grade from count_all where count = (select max(count) as max from count_all));
+
+-- 평균 시급보다 적은 시급을 받는 알바생들의 시급 평균(최소 100원단위)
+--평균보다 적은 알바생
+create or replace noforce
+view avg_down_people as
+select people, wage from employee where wage < (select avg(wage) from employee);
+
+-- 시급 평균
+create or replace noforce
+view avg_down_wage as
+select round(avg(wage),-2) as avg_wage from avg_down_people where wage < (select avg(wage) from employee);
+
+select * from avg_down_wage;
+-- 위 알바생들 중 학교를 다니는 알바생들의 수
+create or replace noforce
+view alba_school as
+select count(people) as people from student inner join avg_down_people using(people);
+-- 위 알바생들 중 학원을 다니는 알바생들의 수
+create or replace noforce
+view alba_academy as
+select count(people) as people from academy_student inner join avg_down_people using(people);
+-- 위 알바생들 중 학교나 학원을 다니지 않는 알바생들
+select people from avg_down_people
+minus
+select people from alba_school
+minus
+select people from alba_academy;
+
+select * from avg_down_people where people != all
+(select people as people from student inner join avg_down_people using(people)
+union
+select people as people from academy_student inner join avg_down_people using(people));
+
+-- 평균 점수 이상이면서 평균 시급 이상을 받는 사람의 이름 출력하기
+create or replace noforce view target as
+select * from 
+(select * from student where score >= (select avg(score) from student))
+inner join
+(select * from employee where wage >= (select avg(wage) from employee))
+using (people);
+
+select people.name from people
+inner join
+target
+on people.keycode = target.people;
+
+-- 인덱스
+create index index_student on student(people);
+drop index index_student;
+alter index index_student rename to index_student2;
+alter index index_student rebuild;
+
+-- 세이브 포인트
+-- 트랜잭션
+-- |-insert-insert-insert-savepoint1-delete-delete-delete-savepoint2-update-update------------|
+-- coomit - 트랜잭션 종료, 재시작
+-- rollback - 트랜잭션의 시작 지점으로 회귀
+-- savepoint - 트랜잭션의 어느 시점에 회귀 플래그를 세운다
+savepoint a; --savepoint 생성
+rollback to a; --특점 savepoint 지점으로 회귀
